@@ -1,0 +1,40 @@
+name: Build Unsigned iOS App
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install Node.js dependencies
+        run: yarn install
+
+      - name: Install CocoaPods dependencies
+        run: |
+          cd ios
+          pod install
+
+      - name: Build unsigned .ipa
+        run: |
+          cd ios
+          xcodebuild clean -workspace YourApp.xcworkspace -scheme YourApp -configuration Release
+          xcodebuild archive -workspace YourApp.xcworkspace -scheme YourApp -configuration Release -archivePath YourApp.xcarchive
+          xcodebuild -exportArchive -archivePath YourApp.xcarchive -exportPath ./build -exportOptionsPlist ExportOptions.plist
+
+      - name: Upload .ipa artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: YourApp.ipa
+          path: ios/build/YourApp.ipa
